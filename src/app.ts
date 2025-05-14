@@ -1,17 +1,19 @@
-import express, { Express } from 'express';
-import { corsOptions } from './config/cors.config';
 import compression from 'compression';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import express, { Express } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import router from './routes';
-import notFoundHandler from './middlewares/notFoundHandlerMiddleware';
+import { corsOptions } from './config/cors.config';
+import setupSwagger from './config/swaggerConfig.config';
 import errorHandler from './middlewares/errorHandlerMiddleware';
+import notFoundHandler from './middlewares/notFoundHandlerMiddleware';
+import router from './routes';
 
 const app: Express = express();
 
 app.use(cors(corsOptions));
+setupSwagger(app);
 app.use(morgan('dev'));
 app.use(helmet());
 app.use(compression());
@@ -26,6 +28,7 @@ app.use(
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/v1/', router);
+app.use('/static', express.static('public'));
 
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -1,0 +1,12 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "E-commerce API",
+        "description": "Tài liệu API cho hệ thống E-commerce",
+        "version": "1.0.0"
+    },
+    "host": "localhost:8000",
+    "basePath": "/",
+    "schemes": ["http"],
+    "paths": {}
+}

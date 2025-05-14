@@ -12,7 +12,7 @@ const envVarsSchema = Joi.object()
         PORT: Joi.number().default(80),
         HOSTNAME: Joi.string().default('127.0.0.1'),
         MONGODB_URL_DEV: Joi.string().description('Local Mongo DB'),
-        // MONGODB_URL_CLOUD: Joi.string().description('Cloud Mongo DB'),
+        MONGODB_URL_CLOUD: Joi.string().description('Cloud Mongo DB'),
     })
     .unknown();
 
@@ -27,9 +27,9 @@ const config = {
     port: envVars.PORT,
     hostname: envVars.HOSTNAME,
     mongoose: {
-        url: envVars.MONGODB_URL_DEV,
+        url: envVars.MONGODB_URL_CLOUD,
         options: {
-            dbName: 'dev',
+            dbName: 'e-commerce',
         },
     },
 };
