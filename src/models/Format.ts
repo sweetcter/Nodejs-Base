@@ -1,6 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
-const vendorSchema = new Schema(
+const formatSchema = new Schema(
     {
         name: {
             type: String,
@@ -13,5 +13,5 @@ const vendorSchema = new Schema(
     },
 );
 
-const Vendor = mongoose.model('Vendor', vendorSchema);
-export default Vendor;
+const Format = mongoose.model('Format', formatSchema);
+export default Format;

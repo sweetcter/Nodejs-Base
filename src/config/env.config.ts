@@ -11,8 +11,14 @@ const envVarsSchema = Joi.object()
         NODE_ENV: Joi.string().valid('production', 'development').required(),
         PORT: Joi.number().default(80),
         HOSTNAME: Joi.string().default('127.0.0.1'),
+        HOST: Joi.string(),
         MONGODB_URL_DEV: Joi.string().description('Local Mongo DB'),
         MONGODB_URL_CLOUD: Joi.string().description('Cloud Mongo DB'),
+
+        JWT_ACCESS_TOKEN_KEY: Joi.string().required().description('JWT Access Token Key'),
+        JWT_REFRESH_TOKEN_KEY: Joi.string().required().description('JWT Refresh Token Key'),
+        JWT_ACCESS_EXPIRATION: Joi.string().default('15m').description('minutes after which access tokens expire'),
+        JWT_REFRESH_EXPIRATION: Joi.string().default('30d').description('days after which refresh tokens expire'),
     })
     .unknown();
 
@@ -26,11 +32,21 @@ const config = {
     env: envVars.NODE_ENV,
     port: envVars.PORT,
     hostname: envVars.HOSTNAME,
+    host: envVars.HOST,
     mongoose: {
         url: envVars.MONGODB_URL_CLOUD,
         options: {
             dbName: 'e-commerce',
         },
+    },
+    jwt: {
+        JWT_ACCESS_TOKEN_KEY: envVars.JWT_ACCESS_TOKEN_KEY,
+        JWT_REFRESH_TOKEN_KEY: envVars.JWT_REFRESH_TOKEN_KEY,
+        JWT_ACCESS_EXPIRATION: envVars.JWT_ACCESS_EXPIRATION,
+        JWT_REFRESH_EXPIRATION: envVars.JWT_REFRESH_EXPIRATION,
+    },
+    cookie: {
+        maxAge: envVars.COOKIE_MAX_AGE,
     },
 };
 
