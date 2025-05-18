@@ -8,5 +8,26 @@
     "host": "localhost:8000",
     "basePath": "/",
     "schemes": ["http"],
-    "paths": {}
+    "paths": {
+        "/categories/all": {
+            "get": {
+                "description": "",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/categories/create": {
+            "post": {
+                "description": "",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        }
+    }
 }

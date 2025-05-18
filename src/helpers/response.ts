@@ -1,8 +1,8 @@
 import { ResponseT } from '@/types/response';
 
-export const customResponse = <T>({ data, success, message, status }: ResponseT<T>) => {
+export const customResponse = <T>({ data, message, status }: ResponseT<T>) => {
+    console.log(data, message, status);
     return {
-        success,
         message,
         status,
         data,

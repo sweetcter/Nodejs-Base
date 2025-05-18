@@ -42,7 +42,7 @@ class APIQuery<T extends Document> {
         let queryStr = JSON.stringify(queryObj);
         queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
 
-        this.query = this.query.find(JSON.parse(queryStr));
+        this.query = this.query.find(JSON.parse(queryStr)).limit(10);
 
         return this;
     }
@@ -55,9 +55,9 @@ class APIQuery<T extends Document> {
     sort(): APIQuery<T> {
         if (this.queryString.sort) {
             const sortBy = this.queryString.sort.split(',').join(' ');
-            this.query = this.query.sort(sortBy);
+            this.query = this.query.sort(sortBy).limit(10);
         } else {
-            this.query = this.query.sort('-createdAt');
+            this.query = this.query.sort('-createdAt').limit(10);
         }
 
         return this;
@@ -71,9 +71,9 @@ class APIQuery<T extends Document> {
     limitFields(): APIQuery<T> {
         if (this.queryString.fields) {
             const fields = this.queryString.fields.split(',').join(' ');
-            this.query = this.query.select(fields);
+            this.query = this.query.select(fields).limit(10);
         } else {
-            this.query = this.query.select('-__v');
+            this.query = this.query.select('-__v').limit(10);
         }
 
         return this;
@@ -90,10 +90,10 @@ class APIQuery<T extends Document> {
             const isId = mongoose.Types.ObjectId.isValid(this.queryString.search);
             if (isId) {
                 const search = this.queryString.search;
-                this.query = this.query.find({ _id: search });
+                this.query = this.query.find({ _id: search }).limit(10);
             } else {
                 const search = toLower(this.queryString.search);
-                this.query = this.query.find({ name: { $regex: search, $options: 'i' } });
+                this.query = this.query.find({ name: { $regex: search, $options: 'i' } }).limit(10);
             }
         }
         return this;

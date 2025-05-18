@@ -19,6 +19,10 @@ const envVarsSchema = Joi.object()
         JWT_REFRESH_TOKEN_KEY: Joi.string().required().description('JWT Refresh Token Key'),
         JWT_ACCESS_EXPIRATION: Joi.string().default('15m').description('minutes after which access tokens expire'),
         JWT_REFRESH_EXPIRATION: Joi.string().default('30d').description('days after which refresh tokens expire'),
+
+        CLOUDINARY_CLOUD_NAME: Joi.string().required().description('Cloudinay Cloud Name'),
+        CLOUDINARY_API_KEY: Joi.string().required().description('JCloudinay Cloud Api Key'),
+        CLOUDINARY_API_SECRET: Joi.string().required().description('JCloudinay Cloud Api Secret Key'),
     })
     .unknown();
 
@@ -40,13 +44,18 @@ const config = {
         },
     },
     jwt: {
-        JWT_ACCESS_TOKEN_KEY: envVars.JWT_ACCESS_TOKEN_KEY,
-        JWT_REFRESH_TOKEN_KEY: envVars.JWT_REFRESH_TOKEN_KEY,
-        JWT_ACCESS_EXPIRATION: envVars.JWT_ACCESS_EXPIRATION,
-        JWT_REFRESH_EXPIRATION: envVars.JWT_REFRESH_EXPIRATION,
+        jwtAccessTokenKey: envVars.JWT_ACCESS_TOKEN_KEY,
+        jwtRefreshTokenKey: envVars.JWT_REFRESH_TOKEN_KEY,
+        jwtAccessExpiration: envVars.JWT_ACCESS_EXPIRATION,
+        jwtRefreshExpiration: envVars.JWT_REFRESH_EXPIRATION,
     },
     cookie: {
         maxAge: envVars.COOKIE_MAX_AGE,
+    },
+    cloudinary: {
+        cloudinaryCloudName: envVars.CLOUDINARY_CLOUD_NAME,
+        cloudinaryApiKey: envVars.CLOUDINARY_API_KEY,
+        cloudinaryApiSecret: envVars.CLOUDINARY_API_SECRET,
     },
 };
 
