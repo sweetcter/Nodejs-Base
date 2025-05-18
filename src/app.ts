@@ -27,7 +27,7 @@ app.use(
 );
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/api/v1/', router);
+app.use('/api/v1', router);
 app.use('/static', express.static('public'));
 
 app.use(notFoundHandler);

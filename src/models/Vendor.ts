@@ -1,10 +1,14 @@
+import { IVendor } from '@/types/vendor';
 import mongoose, { Schema } from 'mongoose';
 
-const vendorSchema = new Schema(
+const vendorSchema = new Schema<IVendor>(
     {
         name: {
             type: String,
             required: true,
+        },
+        description: {
+            type: String,
         },
     },
     {

@@ -6,7 +6,7 @@ const detailInformationSchema = new Schema(
         publisher: { type: Date },
         author: { type: String, required: true },
         pages: { type: Number },
-        publication_date: { type: Date },
+        publicationDate: { type: Date },
         physicalAttributes: {
             width: { type: Number },
             height: { type: Number },
@@ -37,26 +37,22 @@ const productSchema = new Schema(
         },
         status: {
             type: String,
-            enum: [...Object.values(ProductStatus)],
+            enum: Object.values(ProductStatus),
             default: ProductStatus.NEW,
         },
         thumbnail: {
             type: String,
-            required: true,
         },
         thumbnailRef: {
             type: String,
-            required: true,
         },
         library: [
             {
                 imageUrl: {
                     type: String,
-                    required: true,
                 },
                 imageRef: {
                     type: String,
-                    required: true,
                 },
             },
         ],
