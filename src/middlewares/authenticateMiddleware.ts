@@ -9,23 +9,27 @@ type JwtPayload = {
 };
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+    if (!req.cookies.jwt) {
+        return next(new UnAuthenticatedError('Token: Không thể truy cập!'));
+    }
+
     const authHeader = req.headers.authorization || (req.headers.Authorization as string);
 
     if (!authHeader || !authHeader.startsWith('Bearer')) {
-        return next(new UnAuthenticatedError('Token: Invalidated access!'));
+        return next(new UnAuthenticatedError('Token: Không thể truy cập!'));
     }
 
     const token = authHeader.split(' ')?.[0];
 
-    jwt.verify(token, config.jwt.JWT_ACCESS_TOKEN_KEY, function (err: VerifyErrors | null, decoded: any) {
+    jwt.verify(token, config.jwt.jwtAccessTokenKey, function (err: VerifyErrors | null, decoded: any) {
         if (err) {
             if (err.name === 'TokenExpiredError') {
-                return next(new UnAuthenticatedError('Token is expired.'));
+                return next(new UnAuthenticatedError('Token hết hạn.'));
             }
             if (err.name === 'JsonWebTokenError') {
-                return next(new UnAuthenticatedError('Invalid token'));
+                return next(new UnAuthenticatedError('Token không hợp lệ'));
             }
-            return next(new UnAuthenticatedError('Token verification failed.'));
+            return next(new UnAuthenticatedError('Xác minh token thất bại.'));
         }
 
         const { userId, role } = decoded as JwtPayload;

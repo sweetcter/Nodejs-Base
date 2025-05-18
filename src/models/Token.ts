@@ -1,4 +1,4 @@
-import { TOKEN } from '@/constants/token';
+import { Token as TOKEN } from '@/constants/token';
 import mongoose, { Schema } from 'mongoose';
 
 const tokenSchema = new Schema(
@@ -9,7 +9,7 @@ const tokenSchema = new Schema(
         },
         type: {
             type: String,
-            enum: [...Object.values(TOKEN)],
+            enum: Object.values(TOKEN),
             default: TOKEN.REFRESH,
         },
         userId: {
