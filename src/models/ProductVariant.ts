@@ -1,8 +1,12 @@
+import IProductVariant from '@/types/variant';
 import mongoose, { Schema } from 'mongoose';
 
-const variantSchema = new Schema(
+const variantSchema = new Schema<IProductVariant>(
     {
-        imageUrl: {
+        image: {
+            type: String,
+        },
+        imageUrlRef: {
             type: String,
         },
         price: {
@@ -16,12 +20,10 @@ const variantSchema = new Schema(
         discountId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Discount',
-            required: true,
         },
         productId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Product',
-            required: true,
         },
         formatId: {
             type: mongoose.Schema.Types.ObjectId,

@@ -1,4 +1,5 @@
 import { ProductStatus } from '@/constants/enum';
+import IProduct from '@/types/product';
 import mongoose, { Schema } from 'mongoose';
 
 const detailInformationSchema = new Schema(
@@ -8,16 +9,16 @@ const detailInformationSchema = new Schema(
         pages: { type: Number },
         publicationDate: { type: Date },
         physicalAttributes: {
-            width: { type: Number },
-            height: { type: Number },
-            length: { type: Number },
-            weight: { type: Number },
+            width: { type: Number, default: 0 },
+            height: { type: Number, default: 0 },
+            length: { type: Number, default: 0 },
+            weight: { type: Number, default: 0 },
         },
     },
     { _id: false },
 );
 
-const productSchema = new Schema(
+const productSchema = new Schema<IProduct>(
     {
         name: {
             type: String,
@@ -28,12 +29,15 @@ const productSchema = new Schema(
         },
         rating: {
             type: Number,
+            default: 0,
         },
         reviewCount: {
             type: Number,
+            default: 0,
         },
         sold: {
             type: Number,
+            default: 0,
         },
         status: {
             type: String,
@@ -46,16 +50,16 @@ const productSchema = new Schema(
         thumbnailRef: {
             type: String,
         },
-        library: [
-            {
-                imageUrl: {
-                    type: String,
+        library: {
+            type: [
+                {
+                    imageUrl: { type: String },
+                    imageRef: { type: String },
+                    _id: false,
                 },
-                imageRef: {
-                    type: String,
-                },
-            },
-        ],
+            ],
+            default: [],
+        },
         isAvailable: {
             type: Boolean,
             default: true,
@@ -76,12 +80,20 @@ const productSchema = new Schema(
         variants: {
             type: [
                 {
-                    variantId: {
-                        type: mongoose.Schema.Types.ObjectId,
-                        ref: 'ProductVariant',
-                    },
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'ProductVariant',
                 },
             ],
+            default: [],
+        },
+        variantFormats: {
+            type: [
+                {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'Format',
+                },
+            ],
+            default: [],
         },
     },
     {

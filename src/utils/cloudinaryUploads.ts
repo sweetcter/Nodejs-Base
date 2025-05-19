@@ -5,7 +5,7 @@ import { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
 export const uploadSingleFile = (
     file: Express.Multer.File,
     folder?: string,
-): Promise<{ downloadURL: string; urlRef: string; originNames: string[] }> => {
+): Promise<{ downloadURL: string; urlRef: string; originName: string }> => {
     return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
             { folder: folder || 'bookstore', resource_type: 'auto' },
@@ -15,7 +15,7 @@ export const uploadSingleFile = (
                     resolve({
                         downloadURL: result.secure_url,
                         urlRef: result.public_id,
-                        originNames: [file.originalname],
+                        originName: file.originalname,
                     });
                 else reject(error);
             },
@@ -24,7 +24,14 @@ export const uploadSingleFile = (
     });
 };
 
-export const removeFile = async (publicId: string) => {
+export const uploadMutipleFile = (
+    files: Express.Multer.File[],
+): Promise<{ downloadURL: string; urlRef: string; originName: string }[]> => {
+    const uploadPromises = files.map((file) => uploadSingleFile(file));
+    return Promise.all(uploadPromises);
+};
+
+export const removeFile = (publicId: string) => {
     return new Promise((resolve, reject) => {
         cloudinary.uploader.destroy(publicId, (error, result) => {
             if (error) return reject(error);
