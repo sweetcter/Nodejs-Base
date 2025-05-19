@@ -9,7 +9,7 @@ if (process.env.NODE_ENV === 'development') {
 const envVarsSchema = Joi.object()
     .keys({
         NODE_ENV: Joi.string().valid('production', 'development').required(),
-        PORT: Joi.number().default(80),
+        PORT: Joi.number().default(8000),
         HOSTNAME: Joi.string().default('127.0.0.1'),
         HOST: Joi.string(),
         MONGODB_URL_DEV: Joi.string().description('Local Mongo DB'),
