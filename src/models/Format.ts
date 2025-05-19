@@ -1,6 +1,7 @@
+import { IFormat } from '@/types/format';
 import mongoose, { Schema } from 'mongoose';
 
-const formatSchema = new Schema(
+const formatSchema = new Schema<IFormat>(
     {
         name: {
             type: String,
