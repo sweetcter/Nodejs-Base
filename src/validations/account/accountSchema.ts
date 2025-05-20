@@ -2,7 +2,7 @@ import Joi from 'joi';
 import { Types } from 'mongoose';
 
 export const createAccountSchema = Joi.object({
-  userId: Joi.string()
+  username: Joi.string()
     .required()
     .custom((value, helpers) => {
       if (!Types.ObjectId.isValid(value)) {

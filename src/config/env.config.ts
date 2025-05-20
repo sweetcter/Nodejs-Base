@@ -57,6 +57,7 @@ const config = {
         cloudinaryApiKey: envVars.CLOUDINARY_API_KEY,
         cloudinaryApiSecret: envVars.CLOUDINARY_API_SECRET,
     },
+    clientUrl: envVars.CLIENT_URL,
 };
 
 export default config;

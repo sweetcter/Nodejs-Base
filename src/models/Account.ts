@@ -17,6 +17,12 @@ const accountSchema = new Schema(
       trim: true,
       unique: true,
     },
+
+    isVerified: {
+    type: Boolean,
+    default: false,
+    },
+
     phoneNumber: {
       type: String,
       unique: true,

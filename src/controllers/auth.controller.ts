@@ -5,7 +5,8 @@ import Account from '@/models/Account';
 import { createAccountSchema } from '@/validations/account/accountSchema';
 import { BadRequestError } from '@/error/customError';
 import { authService } from '@/services';
-import { generateAuthTokens } from '@/services/token.service';
+import { generateAuthTokens, generateToken } from '@/services/token.service';
+import { mailSender } from '@/helpers/mail.sender';
 import config from '@/config/env.config';
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
@@ -29,6 +30,9 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         secure: config.env === 'production',
         sameSite: 'lax',
     });
+    if (!account.isVerified) {
+        throw new BadRequestError('Tài khoản chưa được xác thực qua email');
+    }
 
     return res.status(200).json({
         statusCode: 200,
@@ -49,19 +53,32 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
         throw new BadRequestError('Email đã được đăng ký');
     }
 
-    // Hash password trước khi tạo tài khoản
+    // Hash password
     const hashedPassword = await bcrypt.hash(value.password, 10);
 
-    // Tạo đối tượng account mới với password đã hash
     const accountData = { ...value, password: hashedPassword };
 
     const account = await Account.create(accountData);
+
+    // Tạo token xác thực email
+    const verificationToken = generateToken(account, config.jwt.jwtAccessTokenKey, '1d');
+    const verifyUrl = `${config.clientUrl}/verify-email?token=${verificationToken}`;
+
+    // Gửi mail
+    await mailSender({
+        email: account.email as string,
+        subject: 'Xác thực tài khoản của bạn',
+        html: `
+            <p>Chào mừng bạn đến với dịch vụ của chúng tôi!</p>
+            <p>Vui lòng bấm vào nút dưới đây để xác thực tài khoản:</p>
+            <a href="${verifyUrl}" style="padding: 10px 20px; background: green; color: white; text-decoration: none;">Xác thực tài khoản</a>        `,
+    });
 
     const { password, ...accountSafe } = account.toObject();
 
     return res.status(201).json({
         statusCode: 201,
-        message: 'Tạo tài khoản thành công',
+        message: 'Tạo tài khoản thành công. Vui lòng kiểm tra email để xác thực tài khoản.',
         data: accountSafe,
     });
 });
@@ -75,3 +92,7 @@ export const authController = {
     register,
     refresh,
 };
+export function verifyEmail(arg0: string, verifyEmail: any) {
+    throw new Error('Function not implemented.');
+}
+
