@@ -16,4 +16,7 @@ router.get('/refresh', authenticate, authController.refresh);
 //Xac thuc email
 router.get('/verify-email', authController.verifyEmail);
 
+//Gui lai email
+router.post('/resend-verification', authController.resendVerificationEmail);
+
 export default router;

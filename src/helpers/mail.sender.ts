@@ -1,4 +1,7 @@
 import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 interface MailOptions {
     email: string;
@@ -12,13 +15,13 @@ export const mailSender = async ({ email, subject, html }: MailOptions): Promise
         port: 465,
         secure: true,
         auth: {
-            user: 'vanhoaian.learn@gmail.com',
-            pass: 'kkov fmol wfow hczc',
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
         },
     });
 
     const message = {
-        from: '"Demo booksell" <vanhoaian.learn@gmail.com>',
+        from: '"Demo booksell" <${process.env.EMAIL_USER}>',
         to: email,
         subject,
         html,

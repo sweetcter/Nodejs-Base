@@ -4,10 +4,10 @@ import bcrypt from 'bcryptjs';
 import Account from '@/models/Account';
 import { createAccountSchema } from '@/validations/account/accountSchema';
 import { BadRequestError } from '@/error/customError';
-import { authService } from '@/services';
 import { generateAuthTokens, generateToken } from '@/services/token.service';
 import { mailSender } from '@/helpers/mail.sender';
 import config from '@/config/env.config';
+import authService from '@/services/auth.service';
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
     const { email, password } = req.body;
@@ -90,7 +90,6 @@ export const refresh = asyncHandler(async (req: Request, res: Response, next: Ne
 export const authController = {
     login,
     register,
-    refresh,
 };
 export function verifyEmail(arg0: string, verifyEmail: any) {
     throw new Error('Function not implemented.');
