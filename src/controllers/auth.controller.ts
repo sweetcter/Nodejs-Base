@@ -1,38 +1,25 @@
 import asyncHandler from '@/helpers/asyncHandler';
 import { Request, Response, NextFunction } from 'express';
-import bcrypt from 'bcryptjs';
-import Account from '@/models/Account';
-import { createAccountSchema } from '@/validations/account/accountSchema';
+import { createAccountSchema, loginSchema } from '@/validations/account/accountSchema';
 import { BadRequestError } from '@/error/customError';
-import { authService } from '@/services';
-import { generateAuthTokens, generateToken } from '@/services/token.service';
-import { mailSender } from '@/helpers/mail.sender';
+import { authService } from '@/services/auth.service';
 import config from '@/config/env.config';
 
-export const login = asyncHandler(async (req: Request, res: Response) => {
-    const { email, password } = req.body;
-
-    const account = await Account.findOne({ email });
-    if (!account || !account.password) {
-        throw new BadRequestError('Tài khoản hoặc mật khẩu không đúng');
+const login = asyncHandler(async (req: Request, res: Response) => {
+    const { error, value } = loginSchema.validate(req.body);
+    if (error) {
+        throw new BadRequestError(error.details[0].message);
     }
 
-    const isPasswordValid = await bcrypt.compare(password, account.password);
-    if (!isPasswordValid) {
-        throw new BadRequestError('Tài khoản hoặc mật khẩu không đúng');
-    }
+    const { usernameOrEmail, password } = value;
+    const { accessToken,refreshToken } = await authService.login(usernameOrEmail, password);
 
-    const { accessToken, refreshToken } = generateAuthTokens(account);
-
-    res.cookie('jwt', refreshToken, {
+      res.cookie('jwt', refreshToken, {
         maxAge: config.cookie.maxAge,
         httpOnly: true,
         secure: config.env === 'production',
         sameSite: 'lax',
     });
-    if (!account.isVerified) {
-        throw new BadRequestError('Tài khoản chưa được xác thực qua email');
-    }
 
     return res.status(200).json({
         statusCode: 200,
@@ -41,40 +28,20 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     });
 });
 
-export const register = asyncHandler(async (req: Request, res: Response) => {
+const register = asyncHandler(async (req: Request, res: Response) => {
     const { error, value } = createAccountSchema.validate(req.body);
     if (error) {
         throw new BadRequestError(error.details[0].message);
     }
 
-    // Kiểm tra email đã tồn tại chưa
-    const existingAccount = await Account.findOne({ email: value.email });
-    if (existingAccount) {
-        throw new BadRequestError('Email đã được đăng ký');
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(value.password, 10);
-
-    const accountData = { ...value, password: hashedPassword };
-
-    const account = await Account.create(accountData);
-
-    // Tạo token xác thực email
-    const verificationToken = generateToken(account, config.jwt.jwtAccessTokenKey, '1d');
-    const verifyUrl = `${config.clientUrl}/verify-email?token=${verificationToken}`;
-
-    // Gửi mail
-    await mailSender({
-        email: account.email as string,
-        subject: 'Xác thực tài khoản của bạn',
-        html: `
-            <p>Chào mừng bạn đến với dịch vụ của chúng tôi!</p>
-            <p>Vui lòng bấm vào nút dưới đây để xác thực tài khoản:</p>
-            <a href="${verifyUrl}" style="padding: 10px 20px; background: green; color: white; text-decoration: none;">Xác thực tài khoản</a>        `,
+    const { email, provider, password, username, phoneNumber } = value;
+    const accountSafe = await authService.register({
+        email,
+        provider,
+        password,
+        username,
+        phoneNumber,
     });
-
-    const { password, ...accountSafe } = account.toObject();
 
     return res.status(201).json({
         statusCode: 201,
@@ -83,15 +50,44 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     });
 });
 
-export const refresh = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+const refresh = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return authService.refresh(req, res, next);
 });
 
-export const authController = {
+const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
+    const { token } = req.query;
+    if (!token || typeof token !== 'string') {
+        throw new BadRequestError('Token xác minh không hợp lệ');
+    }
+
+    await authService.verifyEmail(token);
+
+    return res.status(200).json({
+        statusCode: 200,
+        message: 'Xác minh tài khoản thành công',
+    });
+});
+
+const resendVerificationEmail = asyncHandler(async (req: Request, res: Response) => {
+    const { email } = req.body;
+    if (!email || typeof email !== 'string') {
+        throw new BadRequestError('Vui lòng cung cấp email hợp lệ');
+    }
+
+    await authService.resendVerificationEmail(email);
+
+    return res.status(200).json({
+        statusCode: 200,
+        message: 'Email xác minh đã được gửi lại. Vui lòng kiểm tra email của bạn.',
+    });
+});
+
+const authController = {
     login,
     register,
+    refresh,
+    verifyEmail,
+    resendVerificationEmail,
 };
-export function verifyEmail(arg0: string, verifyEmail: any) {
-    throw new Error('Function not implemented.');
-}
 
+export default authController;
