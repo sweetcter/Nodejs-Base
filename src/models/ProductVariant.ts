@@ -1,4 +1,4 @@
-import IProductVariant from '@/types/variant';
+import { IProductVariant } from '@/types/variant';
 import mongoose, { Schema } from 'mongoose';
 
 const variantSchema = new Schema<IProductVariant>(
@@ -20,10 +20,6 @@ const variantSchema = new Schema<IProductVariant>(
         discountId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Discount',
-        },
-        productId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Product',
         },
         formatId: {
             type: mongoose.Schema.Types.ObjectId,

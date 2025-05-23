@@ -5,7 +5,7 @@ import { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
 export const uploadSingleFile = (
     file: Express.Multer.File,
     folder?: string,
-): Promise<{ downloadURL: string; urlRef: string; originName: string }> => {
+): Promise<{ downloadURL: string; urlRef: string; originName: string; isUsed: boolean }> => {
     return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
             { folder: folder || 'bookstore', resource_type: 'auto' },
@@ -16,6 +16,7 @@ export const uploadSingleFile = (
                         downloadURL: result.secure_url,
                         urlRef: result.public_id,
                         originName: file.originalname,
+                        isUsed: false,
                     });
                 else reject(error);
             },
@@ -26,7 +27,7 @@ export const uploadSingleFile = (
 
 export const uploadMutipleFile = (
     files: Express.Multer.File[],
-): Promise<{ downloadURL: string; urlRef: string; originName: string }[]> => {
+): Promise<{ downloadURL: string; urlRef: string; originName: string; isUsed: boolean }[]> => {
     const uploadPromises = files.map((file) => uploadSingleFile(file));
     return Promise.all(uploadPromises);
 };
