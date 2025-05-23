@@ -6,8 +6,7 @@ import { createAccountSchema } from '@/validations/account/accountSchema';
 import { BadRequestError } from '@/error/customError';
 import { authService } from '@/services';
 import { generateAuthTokens } from '@/services/token.service';
-
-
+import config from '@/config/env.config';
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
     const { email, password } = req.body;
@@ -22,8 +21,14 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         throw new BadRequestError('Tài khoản hoặc mật khẩu không đúng');
     }
 
-    const { accessToken } = generateAuthTokens(account);
+    const { accessToken, refreshToken } = generateAuthTokens(account);
 
+    res.cookie('jwt', refreshToken, {
+        maxAge: config.cookie.maxAge,
+        httpOnly: true,
+        secure: config.env === 'production',
+        sameSite: 'lax',
+    });
 
     return res.status(200).json({
         statusCode: 200,

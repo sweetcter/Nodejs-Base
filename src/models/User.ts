@@ -1,6 +1,7 @@
 import config from '@/config/env.config';
 import { ROLE } from '@/constants/allowRoles';
 import mongoose, { Schema } from 'mongoose';
+import Cart from './Cart';
 
 const userSchema = new Schema(
     {
@@ -59,10 +60,11 @@ const userSchema = new Schema(
     },
 );
 
-userSchema.pre('save', function (next) {
+userSchema.pre('save', async function (next) {
     if (this.isNew) {
         const host = config.host || 'http://localhost:8000';
         this.avatar = `${host}/images/anhdd.png`;
+        await Cart.create({ userId: this._id });
     }
     next();
 });

@@ -30,7 +30,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/v1', router);
 app.use('/static', express.static('public'));
 
-app.use(errorHandler);
 app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;

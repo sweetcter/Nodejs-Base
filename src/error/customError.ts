@@ -2,14 +2,14 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import { HttpException } from './HttpException';
 
 export class NotFoundError extends Error {
-  status: number;
+    status: number;
 
-  constructor(message: string) {
-    super(message);
-    this.name = 'NotFoundError';
-    this.status = 404;
-    Object.setPrototypeOf(this, NotFoundError.prototype);
-  }
+    constructor(message: string) {
+        super(message);
+        this.name = 'NotFoundError';
+        this.status = 404;
+        Object.setPrototypeOf(this, NotFoundError.prototype);
+    }
 }
 
 export class BadRequestError extends HttpException {
