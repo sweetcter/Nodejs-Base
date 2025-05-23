@@ -2,12 +2,12 @@ import Joi from 'joi';
 import { Types } from 'mongoose';
 
 export const createCategorySchema = Joi.object({
-    name: Joi.string().min(3).max(100).trim().required().messages({
+    name: Joi.string().min(3).max(50).trim().required().messages({
         'string.empty': 'Tên danh mục không được để trống',
         'any.required': 'Tên danh mục là bắt buộc',
         'string.base': 'Tên danh mục phải là chuỗi',
         'string.min': 'Tên danh mục phải lớn hơn hoặc bằng 3 kí tự',
-        'string.max': 'Tên danh mục phải nhỏ hơn 100 kí tự',
+        'string.max': 'Tên danh mục phải nhỏ hơn 50 kí tự',
     }),
     parentId: Joi.string()
         .optional()

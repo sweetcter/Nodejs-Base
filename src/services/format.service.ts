@@ -74,7 +74,7 @@ export const updateFormat = async (req: Request, res: Response, next: NextFuncti
         throw new NotFoundError(`Không tìm thấy định dạng với id ${req.params.id}`);
     }
 
-    if (foundedFormat._id !== req.params.id) {
+    if (foundedFormat._id.toString() !== req.params.id) {
         throw new BadRequestError(`Tên định dạng đã tồn tại`);
     }
 

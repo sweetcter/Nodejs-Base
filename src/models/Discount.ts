@@ -1,12 +1,12 @@
-import { Discount } from '@/constants/enum';
+import { Discount as DiscountEnum } from '@/constants/enum';
 import mongoose, { Schema } from 'mongoose';
 
-const variantSchema = new Schema(
+const discountSchema = new Schema(
     {
         discountType: {
             type: String,
-            enum: [...Object.values(Discount)],
-            default: Discount.PERCENT,
+            enum: Object.values(DiscountEnum),
+            default: DiscountEnum.PERCENT,
         },
         discountValue: {
             type: Number,
@@ -27,5 +27,5 @@ const variantSchema = new Schema(
     },
 );
 
-const ProductVariant = mongoose.model('ProductVariant', variantSchema);
-export default ProductVariant;
+const Discount = mongoose.model('Discount', discountSchema);
+export default Discount;
