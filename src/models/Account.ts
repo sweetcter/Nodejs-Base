@@ -23,7 +23,7 @@ const accountSchema = new Schema(
         },
         phoneNumber: {
             type: String,
-            match: /^[0-9]{10,15}$/,
+            match: /^[0-9]{10}$/,
         },
         password: {
             type: String,

@@ -6,15 +6,95 @@
         "version": "1.0.0"
     },
     "host": "localhost:8000",
-    "basePath": "/",
+    "basePath": "/api/v1",
     "schemes": ["http"],
     "paths": {
+        "/register": {
+            "post": {
+                "description": "",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "description": "",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/refresh": {
+            "get": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "type": "string"
+                    },
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/verify-email": {
+            "get": {
+                "description": "",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/resend-verification": {
+            "post": {
+                "description": "",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/categories/all": {
             "get": {
                 "description": "",
                 "responses": {
                     "default": {
                         "description": "hehehhehehehhehe"
+                    }
+                }
+            }
+        },
+        "/categories/{id}": {
+            "get": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
                     }
                 }
             }
@@ -118,6 +198,26 @@
                         "type": "string"
                     }
                 ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/auth/verify-email": {
+            "get": {
+                "description": "",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/auth/resend-verification": {
+            "post": {
+                "description": "",
                 "responses": {
                     "default": {
                         "description": ""

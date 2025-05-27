@@ -15,10 +15,10 @@ export const createAccountSchema = Joi.object({
     }),
 
     phoneNumber: Joi.string()
-        .pattern(/^[0-9]{10,15}$/)
+        .pattern(/^[0-9]{10}$/)
         .optional()
         .messages({
-            'string.pattern.base': 'Số điện thoại phải là số và có độ dài từ 10 đến 15 ký tự',
+            'string.pattern.base': 'Số điện thoại phải là số và có độ dài 10 ký tự',
         }),
 
     provider: Joi.string().valid('email', 'google').required().messages({
@@ -53,5 +53,13 @@ export const loginSchema = Joi.object({
         'string.max': 'Mật khẩu phải nhỏ hơn hoặc bằng 100 ký tự',
         'any.required': 'Mật khẩu là bắt buộc',
         'string.empty': 'Mật khẩu không được để trống',
+    }),
+});
+
+export const resendEmailSchema = Joi.object({
+    email: Joi.string().email().trim().required().messages({
+        'string.email': 'Email không đúng định dạng',
+        'string.empty': 'Email không được để trống',
+        'any.required': 'Email là bắt buộc',
     }),
 });

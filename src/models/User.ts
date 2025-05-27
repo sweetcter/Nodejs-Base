@@ -15,12 +15,13 @@ const userSchema = new Schema(
             unique: true,
             required: true,
         },
-        password: {
-            type: String,
-            required: true,
-        },
         phoneNumber: {
             type: String,
+        },
+        role: {
+            type: String,
+            enum: Object.values(ROLE),
+            default: ROLE.USER,
         },
         address: {
             type: String,
@@ -47,11 +48,6 @@ const userSchema = new Schema(
                     },
                 },
             ],
-        },
-        role: {
-            type: String,
-            enum: Object.values(ROLE),
-            default: ROLE.USER,
         },
     },
     {

@@ -6,6 +6,7 @@ const doc = {
         description: 'Tài liệu API cho hệ thống E-commerce',
     },
     host: 'localhost:8000',
+    basePath: '/api/v1',
     schemes: ['http'],
 };
 

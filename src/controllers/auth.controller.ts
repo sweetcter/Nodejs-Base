@@ -1,11 +1,11 @@
 import asyncHandler from '@/helpers/asyncHandler';
 import { Request, Response, NextFunction } from 'express';
-import { createAccountSchema, loginSchema } from '@/validations/account/accountSchema';
+import { createAccountSchema, loginSchema, resendEmailSchema } from '@/validations/account/accountSchema';
 import { BadRequestError } from '@/error/customError';
 import { authService } from '@/services/auth.service';
 import config from '@/config/env.config';
 
-const login = asyncHandler(async (req: Request, res: Response) => {
+export const login = asyncHandler(async (req: Request, res: Response) => {
     const { error, value } = loginSchema.validate(req.body);
     if (error) {
         throw new BadRequestError(error.details[0].message);
@@ -28,7 +28,7 @@ const login = asyncHandler(async (req: Request, res: Response) => {
     });
 });
 
-const register = asyncHandler(async (req: Request, res: Response) => {
+export const register = asyncHandler(async (req: Request, res: Response) => {
     const { error, value } = createAccountSchema.validate(req.body);
     if (error) {
         throw new BadRequestError(error.details[0].message);
@@ -46,15 +46,15 @@ const register = asyncHandler(async (req: Request, res: Response) => {
     return res.status(201).json({
         statusCode: 201,
         message: 'Tạo tài khoản thành công. Vui lòng kiểm tra email để xác thực tài khoản.',
-        data: accountSafe,
+        data: accountSafe, //dung de kiem tra viec tao tai khoan, loai bo khi review xong
     });
 });
 
-const refresh = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const refresh = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return authService.refresh(req, res, next);
 });
 
-const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
+export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
     const { token } = req.query;
     if (!token || typeof token !== 'string') {
         throw new BadRequestError('Token xác minh không hợp lệ');
@@ -68,11 +68,12 @@ const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
     });
 });
 
-const resendVerificationEmail = asyncHandler(async (req: Request, res: Response) => {
-    const { email } = req.body;
-    if (!email || typeof email !== 'string') {
-        throw new BadRequestError('Vui lòng cung cấp email hợp lệ');
+export const resendVerificationEmail = asyncHandler(async (req: Request, res: Response) => {
+    const { error, value } = resendEmailSchema.validate(req.body);
+    if (error) {
+        throw new BadRequestError(error.details[0].message);
     }
+    const { email } = value;
 
     await authService.resendVerificationEmail(email);
 
@@ -81,13 +82,3 @@ const resendVerificationEmail = asyncHandler(async (req: Request, res: Response)
         message: 'Email xác minh đã được gửi lại. Vui lòng kiểm tra email của bạn.',
     });
 });
-
-const authController = {
-    login,
-    register,
-    refresh,
-    verifyEmail,
-    resendVerificationEmail,
-};
-
-export default authController;
