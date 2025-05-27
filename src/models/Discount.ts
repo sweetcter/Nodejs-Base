@@ -1,7 +1,8 @@
 import { Discount as DiscountEnum } from '@/constants/enum';
+import { IDiscount } from '@/types/discount';
 import mongoose, { Schema } from 'mongoose';
 
-const discountSchema = new Schema(
+const discountSchema = new Schema<IDiscount>(
     {
         discountType: {
             type: String,

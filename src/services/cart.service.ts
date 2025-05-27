@@ -6,7 +6,27 @@ import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
 export const getUserCart = async (req: Request, res: Response, next: NextFunction) => {
-    const cart = await Cart.findOne({ userId: req.userId });
+    const cart = await Cart.findOne({ userId: req.userId || '68301ef93d28dabca549f0d4' }).populate({
+        path: 'items',
+        select: '-createdAt -updatedAt',
+        populate: [
+            {
+                path: 'variantId',
+                select: '-createdAt -updatedAt -imageUrlRef',
+                populate: [
+                    {
+                        path: 'formatId',
+                        select: '-createdAt -updatedAt',
+                    },
+                    {
+                        path: 'discountId',
+                        select: '-createdAt -updatedAt -discountType -startDate -endDate',
+                    },
+                ],
+            },
+        ],
+    });
+
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: cart,
@@ -19,7 +39,7 @@ export const getUserCart = async (req: Request, res: Response, next: NextFunctio
 export const addItemToCart = async (req: Request, res: Response, next: NextFunction) => {
     const { variantId } = req.body;
     let quantity = req.body.quantity > 0 ? req.body.quantity : 1;
-    const cart = await Cart.findOne({ userId: req.userId });
+    const cart = await Cart.findOne({ userId: req.userId || '68301ef93d28dabca549f0d4' });
     const variants = await ProductVariant.findOne({ _id: variantId });
     const isItemExits = cart?.items.find((item) => item.variantId.toString() === variantId);
 
@@ -33,7 +53,7 @@ export const addItemToCart = async (req: Request, res: Response, next: NextFunct
 
     if (isItemExits) {
         await Cart.updateOne(
-            { userId: req.userId, 'items.variantId': variantId },
+            { userId: req.userId || '68301ef93d28dabca549f0d4', 'items.variantId': variantId },
             {
                 $set: {
                     'items.$.quantity': quantity,
@@ -42,7 +62,7 @@ export const addItemToCart = async (req: Request, res: Response, next: NextFunct
         );
     } else {
         await Cart.updateOne(
-            { userId: req.userId },
+            { userId: req.userId || '68301ef93d28dabca549f0d4' },
             {
                 $push: {
                     items: {
@@ -67,7 +87,7 @@ export const updateCartItemQuantity = async (req: Request, res: Response, next: 
     const { variantId } = req.body;
     let quantity = req.body.quantity > 0 ? req.body.quantity : 1;
 
-    const cart = await Cart.findOne({ userId: req.userId });
+    const cart = await Cart.findOne({ userId: req.userId || '68301ef93d28dabca549f0d4' });
     const variants = await ProductVariant.findOne({ _id: variantId });
     const cartItem = cart?.items.find((item) => item.variantId.toString() === variantId);
 
@@ -80,7 +100,7 @@ export const updateCartItemQuantity = async (req: Request, res: Response, next: 
     }
 
     await Cart.updateOne(
-        { userId: req.userId },
+        { userId: req.userId || '68301ef93d28dabca549f0d4' },
         {
             $set: {
                 'items.$[elem].quantity': quantity,
@@ -102,9 +122,9 @@ export const updateCartItemQuantity = async (req: Request, res: Response, next: 
 
 export const removeCartItem = async (req: Request, res: Response, next: NextFunction) => {
     const foundedItem = await Cart.findByIdAndUpdate(
-        { userId: req.userId },
+        { userId: req.userId || '68301ef93d28dabca549f0d4' },
         {
-            $pull: { items: req.body.variantId },
+            $pull: { items: req.params.variantId },
         },
     );
 

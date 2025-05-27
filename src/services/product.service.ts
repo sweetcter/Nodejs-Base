@@ -2,6 +2,7 @@ import { ProductStatus } from '@/constants/enum';
 import { BadRequestError, NotFoundError } from '@/error/customError';
 import APIQuery from '@/helpers/apiQuery';
 import customResponse from '@/helpers/response';
+import Discount from '@/models/Discount';
 import Product from '@/models/Product';
 import ProductVariant from '@/models/ProductVariant';
 import { IFormat } from '@/types/format';
@@ -9,6 +10,7 @@ import { IVariantItem } from '@/types/variant';
 import { removeFile, uploadMutipleFile, uploadSingleFile } from '@/utils/cloudinaryUploads';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
+import mongoose from 'mongoose';
 
 export const createProduct = async (req: Request, res: Response, next: NextFunction) => {
     const files = req.files as { [fieldName: string]: Express.Multer.File | Express.Multer.File[] };
@@ -259,14 +261,24 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
     const feature = new APIQuery(
         Product.find()
             .select('-thumbnailRef')
-            .populate({
-                path: 'variants',
-                select: '-imageUrlRef',
-                populate: {
-                    path: 'formatId',
+            .populate([
+                {
+                    path: 'variants',
+                    select: '-imageUrlRef',
+                    populate: {
+                        path: 'formatId',
+                        select: '-createdAt -updatedAt',
+                    },
+                },
+                {
+                    path: 'categoryId',
                     select: '-createdAt -updatedAt',
                 },
-            }),
+                {
+                    path: 'vendorId',
+                    select: '-createdAt -updatedAt',
+                },
+            ]),
         query,
     );
 
@@ -353,21 +365,41 @@ export const getNewProducts = async (req: Request, res: Response, next: NextFunc
 };
 
 export const getDetailProduct = async (req: Request, res: Response, next: NextFunction) => {
-    const products = await Product.findById(req.params.id).populate({
-        path: 'variants',
-        populate: {
-            path: 'formatId',
+    // const discount = await Discount.find();
+
+    // console.log(discount);
+    console.log('Registered models:', mongoose.modelNames());
+    const product = await Product.findById(req.params.id).populate([
+        {
+            path: 'variants',
+            populate: [
+                {
+                    path: 'formatId',
+                    select: '-createdAt -updatedAt',
+                },
+                {
+                    path: 'discountId',
+                    select: '-createdAt -updatedAt',
+                },
+            ],
+        },
+        {
+            path: 'categoryId',
             select: '-createdAt -updatedAt',
         },
-    });
+        {
+            path: 'vendorId',
+            select: '-createdAt -updatedAt',
+        },
+    ]);
 
-    if (!products) {
+    if (!product) {
         throw new NotFoundError('Không tìm thấy sản phẩm');
     }
 
     return res.status(StatusCodes.OK).json(
         customResponse({
-            data: products,
+            data: product,
             message: ReasonPhrases.OK,
             status: StatusCodes.OK,
         }),

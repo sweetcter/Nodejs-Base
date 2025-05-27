@@ -9,6 +9,6 @@ router.patch('/add', cartController.addItemToCart);
 
 router.patch('/update', cartController.updateCartItemQuantity);
 
-router.delete('/remove', cartController.removeCartItem);
+router.delete('/remove/:variantId', cartController.removeCartItem);
 
 export default router;
