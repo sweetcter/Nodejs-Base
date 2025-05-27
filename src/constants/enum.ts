@@ -38,3 +38,8 @@ export enum CouponDiscountType {
     Percentage = 'percentage',
     Fixed = 'fixed',
 }
+
+export enum ProductLanguage {
+    English = 'english',
+    Vietnamese = 'vietnamese',
+}

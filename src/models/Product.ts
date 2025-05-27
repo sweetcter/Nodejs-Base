@@ -1,4 +1,4 @@
-import { ProductStatus } from '@/constants/enum';
+import { ProductLanguage, ProductStatus } from '@/constants/enum';
 import IProduct from '@/types/product';
 import mongoose, { Schema } from 'mongoose';
 
@@ -8,6 +8,7 @@ const detailInformationSchema = new Schema(
         author: { type: String, required: true },
         pages: { type: Number },
         publicationDate: { type: Date },
+        languague: { type: String, enum: Object.values(ProductLanguage), default: ProductLanguage.Vietnamese },
         physicalAttributes: {
             width: { type: Number, default: 0 },
             height: { type: Number, default: 0 },
