@@ -11,6 +11,10 @@ export const getUserCart = async (req: Request, res: Response, next: NextFunctio
         select: '-createdAt -updatedAt',
         populate: [
             {
+                path: 'productId',
+                select: 'name _id',
+            },
+            {
                 path: 'variantId',
                 select: '-createdAt -updatedAt -imageUrlRef',
                 populate: [
@@ -20,7 +24,7 @@ export const getUserCart = async (req: Request, res: Response, next: NextFunctio
                     },
                     {
                         path: 'discountId',
-                        select: '-createdAt -updatedAt -discountType -startDate -endDate',
+                        select: '-createdAt -updatedAt -startDate -endDate',
                     },
                 ],
             },
@@ -37,23 +41,27 @@ export const getUserCart = async (req: Request, res: Response, next: NextFunctio
 };
 
 export const addItemToCart = async (req: Request, res: Response, next: NextFunction) => {
-    const { variantId } = req.body;
-    let quantity = req.body.quantity > 0 ? req.body.quantity : 1;
+    const body = req.body;
     const cart = await Cart.findOne({ userId: req.userId || '68301ef93d28dabca549f0d4' });
-    const variants = await ProductVariant.findOne({ _id: variantId });
-    const isItemExits = cart?.items.find((item) => item.variantId.toString() === variantId);
+    const variants = await ProductVariant.findOne({ _id: body.variantId });
+    const foundedCartItem = cart?.items.find((item) => item.variantId.toString() === body.variantId);
 
     if (!variants) {
         throw new BadRequestError('Sản phẩm này không tồn tại');
     }
 
-    if (quantity > variants.stock) {
-        quantity = variants.stock;
-    }
+    if (foundedCartItem) {
+        const isOutOfStock = body.quantity + foundedCartItem.quantity > variants.stock;
+        let quantity = body.quantity;
 
-    if (isItemExits) {
+        if (isOutOfStock) {
+            quantity = variants.stock;
+        } else {
+            quantity += foundedCartItem.quantity;
+        }
+
         await Cart.updateOne(
-            { userId: req.userId || '68301ef93d28dabca549f0d4', 'items.variantId': variantId },
+            { userId: req.userId || '68301ef93d28dabca549f0d4', 'items.variantId': body.variantId },
             {
                 $set: {
                     'items.$.quantity': quantity,
@@ -66,8 +74,9 @@ export const addItemToCart = async (req: Request, res: Response, next: NextFunct
             {
                 $push: {
                     items: {
-                        variantId,
-                        quantity,
+                        variantId: body.variantId,
+                        productId: body.productId,
+                        quantity: body.quantity <= variants.stock ? body.quantity : variants.stock,
                     },
                 },
             },
@@ -84,12 +93,12 @@ export const addItemToCart = async (req: Request, res: Response, next: NextFunct
 };
 
 export const updateCartItemQuantity = async (req: Request, res: Response, next: NextFunction) => {
-    const { variantId } = req.body;
-    let quantity = req.body.quantity > 0 ? req.body.quantity : 1;
-
+    const body = req.body;
     const cart = await Cart.findOne({ userId: req.userId || '68301ef93d28dabca549f0d4' });
-    const variants = await ProductVariant.findOne({ _id: variantId });
-    const cartItem = cart?.items.find((item) => item.variantId.toString() === variantId);
+    const variants = await ProductVariant.findOne({ _id: body.variantId });
+    const cartItem = cart?.items.find((item) => item.variantId.toString() === body.variantId);
+    let message = '';
+    let quantity = body.quantity;
 
     if (!cartItem || !variants) {
         throw new BadRequestError('Sản phẩm không tồn tại trong giỏ hàng');
@@ -97,6 +106,7 @@ export const updateCartItemQuantity = async (req: Request, res: Response, next: 
 
     if (quantity > variants.stock) {
         quantity = variants.stock;
+        message = `Giới hạn sản phẩm là ${variants.stock}`;
     }
 
     await Cart.updateOne(
@@ -107,15 +117,15 @@ export const updateCartItemQuantity = async (req: Request, res: Response, next: 
             },
         },
         {
-            arrayFilters: [{ 'elem.variantId': variantId }],
+            arrayFilters: [{ 'elem.variantId': body.variantId }],
         },
     );
 
-    return res.status(StatusCodes.NO_CONTENT).json(
+    return res.status(StatusCodes.OK).json(
         customResponse({
             data: null,
-            message: ReasonPhrases.NO_CONTENT,
-            status: StatusCodes.NO_CONTENT,
+            message: message || ReasonPhrases.OK,
+            status: StatusCodes.OK,
         }),
     );
 };

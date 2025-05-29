@@ -10,6 +10,11 @@ const cartSchema = new Schema(
         items: {
             type: [
                 {
+                    productId: {
+                        type: mongoose.Schema.Types.ObjectId,
+                        ref: 'Product',
+                        required: true,
+                    },
                     variantId: {
                         type: mongoose.Schema.Types.ObjectId,
                         ref: 'ProductVariant',

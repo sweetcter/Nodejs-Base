@@ -1,13 +1,15 @@
 import { cartController } from '@/controllers';
+import { addToCartSchema, updateQuantitySchema } from '@/validations/cart/cartSchema';
+import { validator } from '@/validations/schemaValidator';
 import { Router } from 'express';
 
 const router = Router();
 
-router.get('/all', cartController.getUserCart);
+router.get('/my-cart', cartController.getUserCart);
 
-router.patch('/add', cartController.addItemToCart);
+router.patch('/add', validator(addToCartSchema), cartController.addItemToCart);
 
-router.patch('/update', cartController.updateCartItemQuantity);
+router.patch('/update-quantity', validator(updateQuantitySchema), cartController.updateCartItemQuantity);
 
 router.delete('/remove/:variantId', cartController.removeCartItem);
 
