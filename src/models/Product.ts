@@ -87,6 +87,16 @@ const productSchema = new Schema<IProduct>(
             ],
             default: [],
         },
+        priceRange: {
+            min: {
+                type: Number,
+                default: 0,
+            },
+            max: {
+                type: Number,
+                default: 0,
+            },
+        },
         variantFormats: {
             type: [
                 {

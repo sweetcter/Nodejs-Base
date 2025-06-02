@@ -109,17 +109,23 @@ export const createProductVariant = async (req: Request, res: Response, next: Ne
     const variants = JSON.parse(req.body.variants);
     const { productId } = req.body;
     const variantImageMap = new Map();
+    let maxVariantPrice = 0;
+    let minVariantPrice = Number.MIN_SAFE_INTEGER;
 
-    const productVariants = await Product.findById(productId).populate<{ variantFormats: IFormat[] }>({
+    if (!variants || (Array.isArray(variants) && variants.length === 0)) {
+        throw new BadRequestError('Biến thể không hợp lệ');
+    }
+
+    const product = await Product.findById(productId).populate<{ variantFormats: IFormat[] }>({
         path: 'variantFormats',
     });
 
-    if (!productVariants) {
+    if (!product) {
         throw new NotFoundError('Không tìm thấy sản phẩm');
     }
 
     const variantsFormatId = variants.map((variant: IVariantItem) => variant.formatId);
-    const checkVariantFormatExist = productVariants.variantFormats.some((variantFormat) =>
+    const checkVariantFormatExist = product.variantFormats.some((variantFormat) =>
         variantsFormatId.includes(variantFormat._id),
     );
 
@@ -130,8 +136,8 @@ export const createProductVariant = async (req: Request, res: Response, next: Ne
     if (files.variantImages) {
         const variantsImages = await uploadMutipleFile(files.variantImages as Express.Multer.File[]);
         if (variantsImages) {
-            for (const image of variantsImages) {
-                variantImageMap.set(image.originName, image);
+            for (const variantImage of variantsImages) {
+                variantImageMap.set(variantImage.originName, variantImage);
             }
 
             for (const variant of variants) {
@@ -145,24 +151,32 @@ export const createProductVariant = async (req: Request, res: Response, next: Ne
     }
 
     const insertVariant = await ProductVariant.insertMany(variants);
+    const variantsPrice = insertVariant.map((v) => v.price);
+
+    variantsPrice.forEach((variantPrice) => {
+        if (variantPrice > maxVariantPrice) {
+            maxVariantPrice = variantPrice;
+        }
+
+        if (variantPrice < minVariantPrice) {
+            minVariantPrice = variantPrice;
+        }
+    });
 
     const variantIds = insertVariant.map((variant) => variant._id);
     const uniqueFormatIds = [...new Set(insertVariant.map((variant) => variant.formatId))];
 
-    const products = await Product.findByIdAndUpdate(
-        productId,
+    await Product.updateOne(
+        { _id: productId },
         {
             $push: {
                 variants: { $each: variantIds },
                 variantFormats: { $each: uniqueFormatIds },
             },
+            $min: { 'priceRange.min': minVariantPrice },
+            $max: { 'priceRange.max': maxVariantPrice },
         },
-        { new: true },
     );
-
-    if (!products) {
-        throw new NotFoundError('Không tìm thấy sản phẩm');
-    }
 
     return res.status(StatusCodes.CREATED).json(
         customResponse({
@@ -177,35 +191,34 @@ export const updateProductVariant = async (req: Request, res: Response, next: Ne
     const files = req.files as { [fieldName: string]: Express.Multer.File[] };
     const variants = JSON.parse(req.body.variants || '[]');
     const oldVariantImages = JSON.parse(req.body.oldVariantImages || '[]');
-    const removeVariants = JSON.parse(req.body.removeVariants || '[]');
     const { productId } = req.body;
     const variantImageMap = new Map();
+    const newVariants = [];
+    let maxVariantPrice = 0;
+    let minVariantPrice = Number.MIN_SAFE_INTEGER;
 
-    const productVariants = await Product.findById(productId).populate<{ variantFormats: IFormat[] }>({
+    const product = await Product.findById(productId).populate<{ variantFormats: IFormat[] }>({
         path: 'variantFormats',
     });
 
-    if (!productVariants) {
+    if (!product) {
         throw new NotFoundError('Không tìm thấy sản phẩm');
     }
     const variantsFormatId = variants.map((variant: IVariantItem) => variant.formatId);
-    const checkVariantFormatExist = productVariants.variantFormats.some((variantFormat) =>
+    const checkVariantFormatExist = product.variantFormats.some((variantFormat) =>
         variantsFormatId.includes(variantFormat._id),
     );
 
     if (checkVariantFormatExist) {
         throw new BadRequestError('Biến thể không được trùng định dạng');
     }
-    // return res.status(200).json({
-    //     message: 'OK',
-    // });
 
     if (files.variantImages) {
         const variantsImages = await uploadMutipleFile(files.variantImages as Express.Multer.File[]);
 
         if (variantsImages) {
-            for (const image of variantsImages) {
-                variantImageMap.set(image.originName, image);
+            for (const variantImage of variantsImages) {
+                variantImageMap.set(variantImage.originName, variantImage);
             }
 
             for (const variant of variants) {
@@ -223,28 +236,37 @@ export const updateProductVariant = async (req: Request, res: Response, next: Ne
         ]);
     }
 
-    const variantToUpdate = variants.filter((variant: IVariantItem) => variant._id);
-    const variantToCreate = variants.filter((variant: IVariantItem) => !variant._id);
+    for (const variant of variants) {
+        if (variant && variant?._id) {
+            await ProductVariant.updateOne({ _id: variant._id }, { $set: variant });
+        } else {
+            const newVariant = await ProductVariant.create(variant);
+            newVariants.push(newVariant);
+        }
+    }
 
-    await Promise.all(
-        variantToUpdate.map((variant: IVariantItem) => {
-            const { _id, ...rest } = variant;
-            return ProductVariant.updateOne({ _id }, { $set: rest });
-        }),
-    );
+    const variantsPrice = variants.map((v: IVariantItem) => v.price);
 
-    const newVariants = variantToCreate.length > 0 ? await ProductVariant.insertMany(variantToCreate) : [];
+    variantsPrice.forEach((variantPrice: number) => {
+        if (variantPrice > maxVariantPrice) {
+            maxVariantPrice = variantPrice;
+        }
+
+        if (variantPrice < minVariantPrice) {
+            minVariantPrice = variantPrice;
+        }
+    });
+
     const newVariantsIds = newVariants.map((variant) => variant._id);
 
-    if (removeVariants && removeVariants.length > 0) {
-        await Promise.all(removeVariants.map((variantId: string) => ProductVariant.deleteOne({ _id: variantId })));
-
-        await Product.updateOne({ _id: productId }, { $pull: { variants: { $in: removeVariants } } });
-    }
-
-    if (newVariantsIds && newVariantsIds.length > 0) {
-        await Product.updateOne({ _id: productId }, { $addToSet: { variants: { $each: newVariantsIds } } });
-    }
+    await Product.updateOne(
+        { _id: productId },
+        {
+            $addToSet: { variants: { $each: newVariantsIds } },
+            $min: { 'priceRange.min': minVariantPrice },
+            $max: { 'priceRange.max': maxVariantPrice },
+        },
+    );
 
     return res.status(StatusCodes.OK).json(
         customResponse({
@@ -256,10 +278,11 @@ export const updateProductVariant = async (req: Request, res: Response, next: Ne
 };
 
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
+    const limit = req.params.limit ? Number(req.params.limit) : 1;
     const query = { isAvailable: true, ...req.query };
 
     const feature = new APIQuery(
-        Product.find()
+        Product.find({})
             .select('-thumbnailRef')
             .populate([
                 {
@@ -285,11 +308,13 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
     feature.filter().sort().limitFields().search().paginate();
 
     const [data, totalDocs] = await Promise.all([feature.query, feature.count()]);
+    const totalPages = Math.ceil(totalDocs / limit);
 
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: {
                 products: data,
+                totalPages,
                 totalDocs,
             },
             message: ReasonPhrases.OK,
@@ -365,10 +390,6 @@ export const getNewProducts = async (req: Request, res: Response, next: NextFunc
 };
 
 export const getDetailProduct = async (req: Request, res: Response, next: NextFunction) => {
-    // const discount = await Discount.find();
-
-    // console.log(discount);
-    console.log('Registered models:', mongoose.modelNames());
     const product = await Product.findById(req.params.id).populate([
         {
             path: 'variants',
@@ -416,11 +437,11 @@ export const hiddenProduct = async (req: Request, res: Response, next: NextFunct
         throw new NotFoundError('Sản phẩm không tồn tại');
     }
 
-    return res.status(StatusCodes.CREATED).json(
+    return res.status(StatusCodes.NO_CONTENT).json(
         customResponse({
             data: null,
-            message: ReasonPhrases.CREATED,
-            status: StatusCodes.CREATED,
+            message: ReasonPhrases.NO_CONTENT,
+            status: StatusCodes.NO_CONTENT,
         }),
     );
 };

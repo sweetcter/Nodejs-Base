@@ -20,11 +20,16 @@ interface PhysicalAttributes {
 }
 
 interface DetailInformation {
-    publisher: Date;
-    author: string;
-    pages: number;
-    publicationDate: Date;
-    physicalAttributes: PhysicalAttributes;
+    publisher?: Date;
+    author?: string;
+    pages?: number;
+    publicationDate?: Date;
+    physicalAttributes?: PhysicalAttributes;
+}
+
+interface IPriceRange {
+    min: number;
+    max: number;
 }
 
 export interface IProduct extends mongoose.Document {
@@ -38,6 +43,7 @@ export interface IProduct extends mongoose.Document {
     thumbnailRef?: string;
     library?: ProductImage[];
     isAvailable: boolean;
+    priceRange: IPriceRange;
     detailInformation: DetailInformation;
     categoryId: Schema.Types.ObjectId;
     vendorId: Schema.Types.ObjectId;
