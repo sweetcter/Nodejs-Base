@@ -29,10 +29,10 @@ router.post('/register', authController.register);
 router.post('/login', authController.login);
 
 // Làm mới access token
-router.get('/refresh', authenticate, authController.refresh);
+router.get('/refresh', authController.refresh);
 
 //Xac thuc email
-router.get('/verify-email', authController.verifyEmail);
+router.post('/verify-email', authController.verifyEmail);
 
 //Gui lai email
 router.post('/resend-verification', authController.resendVerificationEmail);

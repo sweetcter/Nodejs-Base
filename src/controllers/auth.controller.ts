@@ -4,6 +4,8 @@ import { createAccountSchema, loginSchema, resendEmailSchema } from '@/validatio
 import { BadRequestError } from '@/error/customError';
 import { authService } from '@/services/auth.service';
 import config from '@/config/env.config';
+import { ReasonPhrases, StatusCodes } from 'http-status-codes';
+import customResponse from '@/helpers/response';
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
     const { error, value } = loginSchema.validate(req.body);
@@ -12,20 +14,22 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const { usernameOrEmail, password } = value;
-    const { accessToken,refreshToken } = await authService.login(usernameOrEmail, password);
+    const userData = await authService.login(usernameOrEmail, password);
 
-      res.cookie('jwt', refreshToken, {
+    res.cookie('jwt', userData.refreshToken, {
         maxAge: config.cookie.maxAge,
         httpOnly: true,
         secure: config.env === 'production',
         sameSite: 'lax',
     });
 
-    return res.status(200).json({
-        statusCode: 200,
-        message: 'Đăng nhập thành công',
-        token: accessToken,
-    });
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: userData,
+            message: ReasonPhrases.OK,
+            status: StatusCodes.OK,
+        }),
+    );
 });
 
 export const register = asyncHandler(async (req: Request, res: Response) => {

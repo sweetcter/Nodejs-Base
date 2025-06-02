@@ -48,6 +48,7 @@ const config = {
         jwtRefreshTokenKey: envVars.JWT_REFRESH_TOKEN_KEY,
         jwtAccessExpiration: envVars.JWT_ACCESS_EXPIRATION,
         jwtRefreshExpiration: envVars.JWT_REFRESH_EXPIRATION,
+        jwtVerificationTokenKey: envVars.JWT_VERIFICATION_TOKEN_KEY,
     },
     cookie: {
         maxAge: envVars.COOKIE_MAX_AGE,

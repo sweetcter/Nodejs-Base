@@ -6,13 +6,14 @@ import customResponse from '@/helpers/response';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import { tokenService } from '.';
-import { generateAuthTokens, generateToken } from './token.service';
+import { generateAuthTokens, generateToken, saveToken } from './token.service';
 import Account from '@/models/Account';
 import User from '@/models/User';
 import { BadRequestError } from '@/error/customError';
 import { mailSender } from '@/helpers/mail.sender';
 import { ROLE } from '@/constants/allowRoles';
 import mongoose from 'mongoose';
+import { token } from 'morgan';
 
 interface RegisterData {
     email: string;
@@ -29,8 +30,8 @@ export const authService = {
         const foundedToken = await tokenService.verifyToken(token, config.jwt.jwtRefreshTokenKey, Token.REFRESH);
 
         const user = {
-            userId: req.userId,
-            role: req.role,
+            _id: foundedToken.userId?._id,
+            role: foundedToken.userId.role,
         };
 
         const { accessToken, refreshToken } = generateAuthTokens(user);
@@ -48,7 +49,7 @@ export const authService = {
 
         return res.status(StatusCodes.OK).json(
             customResponse({
-                data: accessToken,
+                data: { accessToken, refreshToken },
                 message: ReasonPhrases.OK,
                 status: StatusCodes.OK,
             }),
@@ -84,7 +85,18 @@ export const authService = {
             throw new BadRequestError('Tài khoản chưa được xác thực qua email');
         }
 
-        return generateAuthTokens({ userId: user._id, role: user.role });
+        const tokens = generateAuthTokens({ _id: user._id, role: user.role });
+
+        saveToken(tokens.refreshToken, user._id.toString(), Token.REFRESH);
+
+        const userData = {
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            username: user.username,
+            email: user.email,
+        };
+
+        return userData;
     },
 
     register: async (data: RegisterData) => {
@@ -135,6 +147,7 @@ export const authService = {
                 phoneNumber,
                 password: password ? await bcrypt.hash(password, 10) : undefined,
                 isVerified: false,
+                role: user.role,
             };
 
             // Gửi email xác minh
@@ -160,8 +173,8 @@ export const authService = {
             const decoded = jwt.verify(
                 token,
                 (config.jwt as any).jwtVerificationTokenKey || config.jwt.jwtAccessTokenKey,
-            ) as { id: string };
-            const account = await Account.findById(decoded.id);
+            ) as { userId: string };
+            const account = await Account.findOne({ userId: decoded.userId });
             if (!account) {
                 throw new BadRequestError('Tài khoản không tồn tại');
             }
@@ -191,12 +204,16 @@ export const authService = {
     },
 
     sendVerificationEmail: async (account: any) => {
+        const userPayload = {
+            _id: account.userId,
+            role: account.role,
+        };
         const verificationToken = generateToken(
-            account,
+            userPayload,
             (config.jwt as any).jwtVerificationTokenKey || config.jwt.jwtAccessTokenKey,
             '30m',
         );
-        const verifyUrl = `${config.clientUrl}/verify-email?token=${verificationToken}`;
+        const verifyUrl = `${config.clientUrl}/auth/verify-email?token=${verificationToken}&tk=${account.email}`;
 
         try {
             await mailSender({

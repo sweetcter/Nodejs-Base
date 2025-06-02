@@ -10,21 +10,21 @@ type JwtPayload = {
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
     if (!req.cookies.jwt) {
-        return next(new UnAuthenticatedError('Token: Không thể truy cập!'));
+        return next(new UnAuthenticatedError('Token không tồn tại!'));
     }
 
     const authHeader = req.headers.authorization || (req.headers.Authorization as string);
 
     if (!authHeader || !authHeader.startsWith('Bearer')) {
-        return next(new UnAuthenticatedError('Token: Không thể truy cập!'));
+        return next(new UnAuthenticatedError('Token không tồn tại!'));
     }
 
-    const token = authHeader.split(' ')?.[0];
+    const token = authHeader.split(' ')?.[1];
 
     jwt.verify(token, config.jwt.jwtAccessTokenKey, function (err: VerifyErrors | null, decoded: any) {
         if (err) {
             if (err.name === 'TokenExpiredError') {
-                return next(new UnAuthenticatedError('Token hết hạn.'));
+                return next(new UnAuthenticatedError('Token đã hết hạn.'));
             }
             if (err.name === 'JsonWebTokenError') {
                 return next(new UnAuthenticatedError('Token không hợp lệ'));
